@@ -20,4 +20,3 @@ class CommentForm(ModelForm):
         labels = {
             "text": "Текст",
         }
-
