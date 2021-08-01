@@ -27,8 +27,6 @@ def follow_index(request):
         for author in authors:
             for post in Post.objects.filter(author=author.author).all():
                 post_list.append(post)
-            # print(f'{Post.objects.get(author=author.author)}!!!')
-        print(f'{post_list[0]}!!!')
         paginator = Paginator(post_list, settings.POSTS_PER_PAGE)
         page_number = request.GET.get('page')
         page = paginator.get_page(page_number)
@@ -58,11 +56,19 @@ def profile(request, username):
     paginator = Paginator(posts, settings.POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
+    subscriber_count = 0
+    if (Follow.objects.filter(author=author).exists()):
+        subscriber_count = Follow.objects.filter(author=author).count
+    subscribtion_count = 0
+    if (Follow.objects.filter(user=author).exists()):
+        subscribtion_count = Follow.objects.filter(user=author).count
     context = {
         'author': author,
         'page': page,
         'posts': posts,
-        'following': following
+        'following': following,
+        'subscribers': subscriber_count,
+        'subscribtions': subscribtion_count
     }
 
     return render(request, 'profile.html', context)
@@ -142,10 +148,8 @@ def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
     if (Follow.objects.filter(user=user).filter(author=author).exists()
-            or user.username == request.user.username):
-        print('not followed')
+            or author == request.user):
         return redirect('posts:index')
-    print('followed')
     Follow.objects.create(
         user=user,
         author=author
