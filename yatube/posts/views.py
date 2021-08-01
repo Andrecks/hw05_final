@@ -141,7 +141,8 @@ def server_error(request):
 def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
-    if (Follow.objects.filter(user=user).filter(author=author).exists()):
+    if (Follow.objects.filter(user=user).filter(author=author).exists()
+            or user.username == request.username):
         print('not followed')
         return redirect('posts:index')
     print('followed')
