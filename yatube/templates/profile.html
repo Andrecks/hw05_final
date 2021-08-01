@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+{% include 'includes/profile_card.html' %}
+<div class="col-md-9"> 
+    {% for post in page%}
+    {% include "includes/post_item.html" with post=post %}
+      {% endfor %}
+      </div>
+  </div>
+  
+      <!-- Здесь постраничная навигация паджинатора -->
+
+</main> 
+{% include "paginator.html" %}
+{% endblock %} 

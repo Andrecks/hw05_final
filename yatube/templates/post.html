@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+{% include 'includes/profile_card.html' %}
+
+ <div class="col-md-9"> 
+{% include "includes/post_item.html" with post=post %}
+{% include 'includes/comments.html' %}
+ </div>
+</main> 
+{% endblock %} 
