@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
-from ..models import Group, Post
+from ..models import Follow, Group, Post
 from django import forms
 from django.core.cache import cache
 
@@ -261,3 +261,53 @@ class PostsViewsTests(TestCase):
         cache.clear()
         response = self.client.get(url + '?page=2')
         self.assertEqual(len(response.context['page']), count - 1)
+
+    def test_user_can_subscribe_to_other_user_and_unsubscribe(self):
+        not_author = PostsViewsTests.not_author
+        author = PostsViewsTests.author
+        url = reverse('posts:profile_follow', kwargs={'username':
+                                                      author.username})
+        sub_counter = Follow.objects.filter(user=not_author).count()
+        self.authoruzed_not_author_client.get(url)
+        self.assertEqual(Follow.objects.filter(user=not_author).count(),
+                         sub_counter + 1)
+        url = reverse('posts:profile_unfollow', kwargs={'username':
+                                                        author.username})
+        sub_counter = Follow.objects.filter(user=not_author).count()
+        self.authoruzed_not_author_client.get(url)
+        self.assertEqual(Follow.objects.filter(user=not_author).count(),
+                         sub_counter - 1)
+
+    def test_index_follow_shows_subscribed_author_post(self):
+        self.new_user = User.objects.create(
+            username='newuser'
+        )
+        self.new_author = User.objects.create(
+            username='newauthor'
+        )
+        self.link = Follow.objects.create(
+            user=self.new_user,
+            author=self.new_author
+        )
+        self.new_client = Client()
+        self.new_client.force_login(self.new_user)
+        self.new_author_client = Client()
+        self.new_author_client.force_login(self.new_author)
+        url = reverse('posts:follow_index')
+        newuser_follow = self.new_client.get(url)
+        author_follow = self.new_author_client.get(url)
+        count_follow_not_author = len(newuser_follow.context['page'])
+        count_follow_author = len(author_follow.context['page'])
+        self.test_post = Post.objects.create(
+            text='test post for not author by author',
+            author=self.new_author
+        )
+        newuser_follow = self.new_client.get(url)
+        author_follow = self.new_author_client.get(url)
+        self.assertEqual(len(author_follow.context['page']),
+                         count_follow_author)
+        self.assertEqual(len(newuser_follow.context['page']),
+                         count_follow_not_author + 1)
+        self.link.delete()
+        self.new_author.delete()
+        self.new_user.delete()

@@ -20,18 +20,21 @@ def index(request):
 
 @login_required
 def follow_index(request):
-    if (Follow.objects.filter(user=request.user).count()):
-        user = get_object_or_404(User, username=request.user)
-        authors = Follow.objects.filter(user=user).distinct()
-        post_list = []
-        for author in authors:
-            for post in Post.objects.filter(author=author.author).all():
-                post_list.append(post)
-        paginator = Paginator(post_list, settings.POSTS_PER_PAGE)
-        page_number = request.GET.get('page')
-        page = paginator.get_page(page_number)
-        return render(request, 'index.html', {'page': page})
-    return redirect('posts:index')
+    # попытался сделать так, чтобы не выводило пустую страницу
+    # но тогда с пайтестом проблема, потому что с перенаправлением
+    # респонс становиться типом NoneType
+    # if (Follow.objects.filter(user=request.user).count()):
+    user = get_object_or_404(User, username=request.user)
+    authors = Follow.objects.filter(user=user).distinct()
+    post_list = []
+    for author in authors:
+        for post in Post.objects.filter(author=author.author).all():
+            post_list.append(post)
+    paginator = Paginator(post_list, settings.POSTS_PER_PAGE)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'index.html', {'page': page})
+    # return redirect('posts:index')
 
 
 def group_posts(request, slug):

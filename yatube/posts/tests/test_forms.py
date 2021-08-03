@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from ..forms import PostForm
-from ..models import Post, Group
+from ..models import Comment, Post, Group
 from django import forms
 User = get_user_model()
 
@@ -27,9 +27,9 @@ class PostsFormsTests(TestCase):
         )
 
     def setUp(self):
-        # Создаем авторизованный клиент
         self.authorized_client = Client()
         self.authorized_client.force_login(PostsFormsTests.user)
+        self.guest_client = Client()
         small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -112,3 +112,26 @@ class PostsFormsTests(TestCase):
                 # Проверяет, что поле формы является экземпляром
                 # указанного класса
                 self.assertIsInstance(form_field, expected)
+
+    def test_only_authorized_users_can_comment(self):
+        self.comment = {
+            'text': 'Test commenting'
+        }
+        self.testpost = Post.objects.create(
+            text='Post for testing comments',
+            author=PostsFormsTests.user
+        )
+        url = reverse('posts:add_comment',
+                      kwargs={'username': PostsFormsTests.user.username,
+                              'post_id': self.testpost.pk})
+        # замеряем количество комментов
+        count = Comment.objects.count()
+        self.authorized_client.post(url, data=self.comment)
+        response_anon = self.guest_client.post(url, data=self.comment)
+        self.assertRedirects(response_anon,
+                             f'/auth/login/?next='
+                             f'/{PostsFormsTests.user.username}/'
+                             f'{self.testpost.pk}/comment')
+        self.assertEqual(Comment.objects.count(),
+                         count + 1)
+        self.testpost.delete()
