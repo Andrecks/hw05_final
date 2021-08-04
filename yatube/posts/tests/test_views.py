@@ -271,6 +271,14 @@ class PostsViewsTests(TestCase):
         self.authoruzed_not_author_client.get(url)
         self.assertEqual(Follow.objects.filter(user=not_author).count(),
                          sub_counter + 1)
+
+    def test_user_can_unsubscribe_from_other_user(self):
+        not_author = PostsViewsTests.not_author
+        author = PostsViewsTests.author
+        self.link = Follow.objects.create(
+            user=not_author,
+            author=author
+        )
         url = reverse('posts:profile_unfollow', kwargs={'username':
                                                         author.username})
         sub_counter = Follow.objects.filter(user=not_author).count()

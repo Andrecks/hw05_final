@@ -24,12 +24,7 @@ def follow_index(request):
     # но тогда с пайтестом проблема, потому что с перенаправлением
     # респонс становиться типом NoneType
     # if (Follow.objects.filter(user=request.user).count()):
-    user = get_object_or_404(User, username=request.user)
-    authors = Follow.objects.filter(user=user).distinct()
-    post_list = []
-    for author in authors:
-        for post in Post.objects.filter(author=author.author).all():
-            post_list.append(post)
+    post_list = Post.objects.filter(author__following__user=request.user).all()
     paginator = Paginator(post_list, settings.POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -52,26 +47,18 @@ def profile(request, username):
     following = False
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
-    if (not request.user.is_anonymous):
+    if (request.user.is_authenticated):
         user = request.user
-        if (Follow.objects.filter(user=user).filter(author=author).exists()):
-            following = True
+        following = Follow.objects.filter(
+            user=user).filter(author=author).exists()
     paginator = Paginator(posts, settings.POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    subscriber_count = 0
-    if (Follow.objects.filter(author=author).exists()):
-        subscriber_count = Follow.objects.filter(author=author).count
-    subscribtion_count = 0
-    if (Follow.objects.filter(user=author).exists()):
-        subscribtion_count = Follow.objects.filter(user=author).count
     context = {
         'author': author,
         'page': page,
         'posts': posts,
         'following': following,
-        'subscribers': subscriber_count,
-        'subscribtions': subscribtion_count
     }
 
     return render(request, 'profile.html', context)
@@ -80,7 +67,7 @@ def profile(request, username):
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     user = post.author
-    comments = Comment.objects.filter(post=post)
+    comments = Comment.objects.filter(post__comments__pk=post_id).all()
     form = CommentForm()
     return render(request, 'post.html', {'post': post,
                                          'author': user,
@@ -150,13 +137,11 @@ def server_error(request):
 def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
-    if (Follow.objects.filter(user=user).filter(author=author).exists()
-            or author == request.user):
-        return redirect('posts:index')
-    Follow.objects.create(
-        user=user,
-        author=author
-    )
+    if (author != request.user):
+        Follow.objects.get_or_create(
+            user=user,
+            author=author
+        )
     return redirect('posts:follow_index')
 
 
@@ -164,7 +149,6 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
-    if (Follow.objects.filter(user=user).filter(author=author).exists()):
-        link = get_object_or_404(Follow, user=user, author=author)
-        link.delete()
+    link = get_object_or_404(Follow, user=user, author=author)
+    link.delete()
     return redirect('posts:index')

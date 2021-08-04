@@ -40,7 +40,7 @@ class Comment(models.Model):
                              related_name="comments")
 
     def __str__(self):
-        return self.text[::15]
+        return self.text[:15]
 
     class Meta:
         ordering = ["-created"]
@@ -51,6 +51,12 @@ class Follow(models.Model):
                              null=True, on_delete=SET_NULL)
     author = models.ForeignKey(User, related_name="following",
                                on_delete=CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'author'],
+                                    name="unique_followers")
+        ]
 
     def __repr__(self):
         return {'user': self.user,
