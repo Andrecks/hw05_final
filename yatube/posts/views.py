@@ -20,17 +20,12 @@ def index(request):
 
 @login_required
 def follow_index(request):
-    # попытался сделать так, чтобы не выводило пустую страницу
-    # но тогда с пайтестом проблема, потому что с перенаправлением
-    # респонс становиться типом NoneType
-    # if (Follow.objects.filter(user=request.user).count()):
     post_list = Post.objects.filter(author__following__user=request.user).all()
     paginator = Paginator(post_list, settings.POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'index.html', {'page': page})
-    # return redirect('posts:index')
-
+    return render(request, 'index.html', {'page': page,
+                                          'follow': True})
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
@@ -67,7 +62,7 @@ def profile(request, username):
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     user = post.author
-    comments = Comment.objects.filter(post__comments__pk=post_id).all()
+    comments = Comment.objects.all()
     form = CommentForm()
     return render(request, 'post.html', {'post': post,
                                          'author': user,
@@ -137,7 +132,7 @@ def server_error(request):
 def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
-    if (author != request.user):
+    if author != request.user:
         Follow.objects.get_or_create(
             user=user,
             author=author
