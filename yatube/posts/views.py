@@ -6,6 +6,7 @@ from .forms import CommentForm, PostForm
 from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 User = get_user_model()
 
 
@@ -26,6 +27,7 @@ def follow_index(request):
     page = paginator.get_page(page_number)
     return render(request, 'index.html', {'page': page,
                                           'follow': True})
+
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
@@ -78,6 +80,7 @@ def new_post(request):
         new_post = form.save(commit=False)
         new_post.author = user
         form.save()
+        cache.clear()
         return redirect('posts:index')
     return render(request, 'form.html', {'form': form,
                                          'edit': False})
@@ -147,3 +150,12 @@ def profile_unfollow(request, username):
     link = get_object_or_404(Follow, user=user, author=author)
     link.delete()
     return redirect('posts:index')
+
+
+@login_required
+def post_delete(request, username, post_id):
+    user = request.user
+    post = get_object_or_404(Post, pk=post_id, author__username=username)
+    post.delete()
+    cache.clear()
+    return redirect('posts:profile', user.username)

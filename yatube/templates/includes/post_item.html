@@ -48,6 +48,9 @@
           <a class="btn btn-sm btn-info" href="{% url 'posts:post_edit' post.author.username post.id %}" role="button">
             Редактировать
           </a>
+            <a id="del" href={% url 'posts:post_delete' user.username post.id%} onclick="return confirm('Уверены что хотите удалить этот пост?');" class="btn btn-sm btn-danger" role="button">
+            Удалить пост
+          </a>
         {% endif %}
       </div>
 
