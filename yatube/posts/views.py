@@ -156,6 +156,10 @@ def profile_unfollow(request, username):
 def post_delete(request, username, post_id):
     user = request.user
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    post.delete()
-    cache.clear()
+    author = get_object_or_404(User, username=username)
+    if (user == author):
+        post.delete()
+        cache.clear()
+    else:
+        return redirect('posts:index')
     return redirect('posts:profile', user.username)
