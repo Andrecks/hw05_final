@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.deletion import CASCADE, SET_NULL
-
+from django.utils import timezone
 User = get_user_model()
 
 
@@ -17,7 +17,7 @@ class Group(models.Model):
 
 class Post(models.Model):
     text = models.TextField()
-    pub_date = models.DateTimeField("date_published", auto_now_add=True,
+    pub_date = models.DateTimeField("date_published", default=timezone.now,
                                     db_index=True)
     author = models.ForeignKey(User, on_delete=CASCADE, related_name="posts")
     group = models.ForeignKey(Group, blank=True, null=True,

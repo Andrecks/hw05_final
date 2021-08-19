@@ -9,3 +9,14 @@ def year(request):
     return {
         'year': year
     }
+
+
+def calc_age(request):
+    born = dt.date(1995, 10, 9)
+    today = dt.date.today()
+    age = today.year - born.year - ((today.month,
+                                     today.day) < (born.month, born.day)
+                                    )
+    return {
+        'age': age
+    }
