@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'e_dhg8^n@y*b!4-*u+-((o+!no+f*hk8&jx9f6(#ox^&+2x#@3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -32,7 +32,8 @@ ALLOWED_HOSTS = [
     "testserver",
     "http://ndrews.pythonanywhere.com",
     "ndrews.pythonanywhere.com",
-    "www.ndrews.pythonanywhere.com"
+    "www.ndrews.pythonanywhere.com",
+    "51.250.31.81"
 ]
 
 
